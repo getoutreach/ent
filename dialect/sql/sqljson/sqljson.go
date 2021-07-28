@@ -39,6 +39,46 @@ func ValueEQ(column string, arg interface{}, opts ...Option) *sql.Predicate {
 	})
 }
 
+func ValueContainsStr(column string, arg string, opts ...Option) *sql.Predicate {
+	return sql.P(func(b *sql.Builder) {
+		switch b.Dialect() {
+		case dialect.SQLite:
+			path := &PathOptions{Ident: column}
+			for i := range opts {
+				opts[i](path)
+			}
+			b.WriteString("SELECT * FROM JSON_EACH").Nested(func(b *sql.Builder) {
+				b.Ident(column).Comma()
+				path.mysqlPath(b)
+			})
+			b.WriteString(" WHERE ").Ident("value").WriteOp(sql.OpLike).Arg(arg)
+		default:
+			opts = append(opts, Unquote(true))
+			ValuePath(b, column, opts...)
+			argWithWildCard := "%" + arg + "%"
+			b.WriteOp(sql.OpLike).Arg(argWithWildCard)
+		}
+	})
+}
+
+func ValueHasPrefix(column string, arg string, opts ...Option) *sql.Predicate {
+	return sql.P(func(b *sql.Builder) {
+		opts = append(opts, Unquote(true))
+		ValuePath(b, column, opts...)
+		argWithWildCard := arg + "%"
+		b.WriteOp(sql.OpLike).Arg(argWithWildCard)
+	})
+}
+
+func ValueHasSuffix(column string, arg string, opts ...Option) *sql.Predicate {
+	return sql.P(func(b *sql.Builder) {
+		opts = append(opts, Unquote(true))
+		ValuePath(b, column, opts...)
+		argWithWildCard := "%" + arg
+		b.WriteOp(sql.OpLike).Arg(argWithWildCard)
+	})
+}
+
 // ValueNEQ return a predicate for checking that a JSON value
 // (returned by the path) is not equal to the given argument.
 //
