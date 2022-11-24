@@ -90,7 +90,7 @@ func ({{ $receiver }} *{{ $builder }}) createSpec() (*{{ $.Name }}, *sqlgraph.Cr
 		}
 		{{- if $f.Optional }}
 			if {{ $mutation }}.{{ $f.StructField }}Cleared() {
-				_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+				_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 					Type: field.{{ $f.Type.ConstName }},
 					Column: {{ $.Package }}.{{ $f.Constant }},
 				})
