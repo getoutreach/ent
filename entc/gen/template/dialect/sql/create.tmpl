@@ -98,6 +98,12 @@ func ({{ $receiver }} *{{ $builder }}) createSpec() (*{{ $.Name }}, *sqlgraph.Cr
 		{{- end }}		
 	{{- end }}
 	{{- range $e := $.EdgesWithID }}
+		if {{ $mutation }}.{{ $e.MutationCleared }}() {
+			{{- with extend $ "Edge" $e }}
+				{{ template "dialect/sql/defedge" . }}
+			{{- end }}
+			_spec.Edges = append(_spec.Edges, edge)
+		}
 		if nodes := {{ $mutation }}.{{ $e.StructField }}IDs(); len(nodes) > 0 {
 			{{- with extend $ "Edge" $e "Nodes" true "Zero" "nil" }}
 				{{ template "dialect/sql/defedge" . }}{{/* defined in sql/update.tmpl */}}
